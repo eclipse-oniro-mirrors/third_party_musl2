@@ -295,22 +295,13 @@ static Sym *gnu_lookup_filtered(uint32_t h1, uint32_t *hashtab, struct dso *dso,
 #if defined(__GNUC__)
 __attribute__((always_inline))
 #endif
-
-void _printInfo(void)
-{
-	int i = 0;
-}
-
-//关于调用宏FIND_SYM打印日志的函数
 static inline struct symdef find_sym2(struct dso *dso, const char *s, int need_def, int use_deps)
 {
 	uint32_t h = 0, gh = gnu_hash(s), gho = gh / (8*sizeof(size_t)), *ght;
 	size_t ghm = 1ul << gh % (8*sizeof(size_t));
 	struct symdef def = {0};
 	struct dso **deps = use_deps ? dso->deps : 0;
-	_printInfo();
 	for (; dso; dso=use_deps ? *deps++ : dso->syms_next) {
-		//在有调用宏FIND_SYM处前后添加打印函数和将0b01101的第一位开关打开--》0b01111一样，系统无法运行
 		//DEBUG(FIND_SYM, "Find symbol: %s from library: %s\n", s, dso->name);// s, dso->name
 		Sym *sym;
 		if ((ght = dso->ghashtab)) {
@@ -337,11 +328,9 @@ static inline struct symdef find_sym2(struct dso *dso, const char *s, int need_d
 
 	return def;
 }
-//封装find_sym2()
 static struct symdef find_sym(struct dso *dso, const char *s, int need_def)
-{
-	
-	return find_sym2(dso, s, need_def, 0);//调用find_sym
+{	
+	return find_sym2(dso, s, need_def, 0);
 }
 
 static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stride)
@@ -388,6 +377,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		} else {
 			addend = *reloc_addr;
 		}
+
 		sym_index = R_SYM(rel[1]);
 		if (sym_index) {
 			sym = syms + sym_index;
@@ -395,7 +385,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			ctx = type==REL_COPY ? head->syms_next : head;
 			def = (sym->st_info>>4) == STB_LOCAL
 				? (struct symdef){ .dso = dso, .sym = sym }
-				: find_sym(ctx, name, type==REL_PLT); //调用有宏FIND_SYM的打印日志函数
+				: find_sym(ctx, name, type==REL_PLT);
 			if (!def.sym && (sym->st_shndx != SHN_UNDEF
 			    || sym->st_info>>4 != STB_WEAK)) {
 				if (dso->lazy && (type==REL_PLT || type==REL_GOT)) {
@@ -1126,19 +1116,17 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 	map = noload ? 0 : map_library(fd, &temp_dso);
 	close(fd);
 	if (!map) return 0;
+
 	/* Avoid the danger of getting two versions of libc mapped into the
 	 * same process when an absolute pathname was used. The symbols
 	 * checked are chosen to catch both musl and glibc, and to avoid
 	 * false positives from interposition-hack libraries. */
 	decode_dyn(&temp_dso);
-	////调用有宏FIND_SYM的打印日志函数
-	
 	if (find_sym(&temp_dso, "__libc_start_main", 1).sym &&
 	    find_sym(&temp_dso, "stdin", 1).sym) {
 		unmap_library(&temp_dso);
 		return load_library("libc.so", needed_by);
 	}
-
 	/* Past this point, if we haven't reached runtime yet, ldso has
 	 * committed either to use the mapped library or to abort execution.
 	 * Unmapping is not possible, so we can safely reclaim gaps. */
@@ -1205,7 +1193,6 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 
 static void load_direct_deps(struct dso *p)
 {
-	fprintf(stdout,"******************load_direct_deps*****************\n");
 	INFO(LOAD_LIB, "Load direct depends of %s(%p)\n", p->name, p->base);
 	size_t i, cnt=0;
 
@@ -1358,7 +1345,6 @@ static void reloc_all(struct dso *p)
 	size_t dyn[DYN_CNT];
 	for (; p; p=p->next) {
 		if (p->relocated) {
-			fprintf(stdout,"RELO:%d name:%s\n",RELO,p->name);
 			DEBUG(RELO, "Library: %s was already relocated\n", p->name);
 			continue;
 		}
@@ -1370,7 +1356,7 @@ static void reloc_all(struct dso *p)
 			2+(dyn[DT_PLTREL]==DT_RELA));
 		do_relocs(p, laddr(p, dyn[DT_REL]), dyn[DT_RELSZ], 2);
 		do_relocs(p, laddr(p, dyn[DT_RELA]), dyn[DT_RELASZ], 3);
-		INFO(RELO, "Relocate library: %s\n", p->name);
+		INFO(RELO, "Relocate library: %s\n", p->name);//从上面1357行移下来的
 		if (head != &ldso && p->relro_start != p->relro_end &&
 		    mprotect(laddr(p, p->relro_start), p->relro_end-p->relro_start, PROT_READ)
 		    && errno != ENOSYS) {
@@ -1684,12 +1670,12 @@ hidden void __dls2(unsigned char *base, size_t *sp)
 	
 	head = &ldso;
 	reloc_all(&ldso);
+
 	ldso.relocated = 0;
 
 	/* Call dynamic linker stage-2b, __dls2b, looking it up
 	 * symbolically as a barrier against moving the address
 	 * load across the above relocation processing. */
-	//调用有宏FIND_SYM的打印日志函数
 	struct symdef dls2b_def = find_sym(&ldso, "__dls2b", 0);
 	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls2b_def.sym-ldso.syms])(sp, auxv);
 	else ((stage3_func)laddr(&ldso, dls2b_def.sym->st_value))(sp, auxv);
@@ -1713,7 +1699,6 @@ void __dls2b(size_t *sp, size_t *auxv)
 	if (__init_tp(__copy_tls((void *)builtin_tls)) < 0) {
 		a_crash();
 	}
-	//关于调用宏FIND_SYM打印日志的函数
 	struct symdef dls3_def = find_sym(&ldso, "__dls3", 0);
 	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls3_def.sym-ldso.syms])(sp, auxv);
 	else ((stage3_func)laddr(&ldso, dls3_def.sym->st_value))(sp, auxv);
@@ -1975,7 +1960,6 @@ void __dls3(size_t *sp, size_t *auxv)
 	/* Determine if malloc was interposed by a replacement implementation
 	 * so that calloc and the memalign family can harden against the
 	 * possibility of incomplete replacement. */
-	//调用有宏FIND_SYM的打印日志函数
 	if (find_sym(head, "malloc", 1).dso != &ldso)
 		__malloc_replaced = 1;
 
@@ -2204,14 +2188,11 @@ static void *do_dlsym(struct dso *p, const char *s, void *ra)
 		return 0;
 	} else
 		use_deps = 1;
-	//调用有宏FIND_SYM的打印日志函数
-
 	struct symdef def = find_sym2(p, s, 0, use_deps);
 	if (!def.sym) {
 		error("Symbol not found: %s", s);
 		return 0;
 	}
-
 	if ((def.sym->st_info&0xf) == STT_TLS)
 		return __tls_get_addr((tls_mod_off_t []){def.dso->tls_id, def.sym->st_value-DTP_OFFSET});
 	if (DL_FDPIC && (def.sym->st_info&0xf) == STT_FUNC)
@@ -2316,7 +2297,6 @@ hidden void *__dlsym_redir_time64(void *restrict p, const char *restrict s, void
 	/* Use the presence of the remapped symbol name in libc to determine
 	 * whether it's one that requires time64 redirection; replace if so. */
 	snprintf(redir, sizeof redir, "__%.*s%s%s", (int)l, s, suffix, suffix2);
-	//调用有宏FIND_SYM的打印日志函数
 	if (find_sym(&ldso, redir, 1).sym) s = redir;
 no_redir:
 #endif

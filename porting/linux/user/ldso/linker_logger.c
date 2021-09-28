@@ -39,7 +39,7 @@ int linker_logger_va_list(const char* tag, int priority, char* format, va_list a
 	return ret;
 }
 
-int check_mods(int mod, int priority){       
+int check_mods(int mod, int priority){
 	if ((LINKER_DEBUG & enable_log) == 0){
 		return 1;
 	}
@@ -62,7 +62,6 @@ int printvf(int mod, int priority, char* format, ...){
         va_start(ap, format);
         ret = linker_logger_va_list(name, priority, format, ap);
         va_end(ap);
-        fprintf(stdout,"ret:%d\n",ret);
         return ret;
 }
 
