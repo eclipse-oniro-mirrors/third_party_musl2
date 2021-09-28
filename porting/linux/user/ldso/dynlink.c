@@ -301,7 +301,7 @@ void _printInfo(void)
 	int i = 0;
 }
 
-//关于调用宏FIND_SYM打印日志的函数,调用了函数find_sym2的地方不能有打印输出函数，不然进不去系统
+//关于调用宏FIND_SYM打印日志的函数
 static inline struct symdef find_sym2(struct dso *dso, const char *s, int need_def, int use_deps)
 {
 	uint32_t h = 0, gh = gnu_hash(s), gho = gh / (8*sizeof(size_t)), *ght;
@@ -1353,13 +1353,12 @@ static void do_mips_relocs(struct dso *p, size_t *got)
 		do_relocs(p, rel, sizeof rel, 2);
 	}
 }
-
 static void reloc_all(struct dso *p)
 {
 	size_t dyn[DYN_CNT];
-	//关于RELO宏，可以在其前后添加打印调试信息，但是把0b01101的第4位开关打开后--》0b11101系统就会挂掉
 	for (; p; p=p->next) {
 		if (p->relocated) {
+			fprintf(stdout,"RELO:%d name:%s\n",RELO,p->name);
 			DEBUG(RELO, "Library: %s was already relocated\n", p->name);
 			continue;
 		}
@@ -1684,14 +1683,12 @@ hidden void __dls2(unsigned char *base, size_t *sp)
 	saved_addends = addends;
 	
 	head = &ldso;
-	reloc_all(&ldso); 
-
+	reloc_all(&ldso);
 	ldso.relocated = 0;
 
 	/* Call dynamic linker stage-2b, __dls2b, looking it up
 	 * symbolically as a barrier against moving the address
 	 * load across the above relocation processing. */
-
 	//调用有宏FIND_SYM的打印日志函数
 	struct symdef dls2b_def = find_sym(&ldso, "__dls2b", 0);
 	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls2b_def.sym-ldso.syms])(sp, auxv);
@@ -1716,7 +1713,6 @@ void __dls2b(size_t *sp, size_t *auxv)
 	if (__init_tp(__copy_tls((void *)builtin_tls)) < 0) {
 		a_crash();
 	}
-
 	//关于调用宏FIND_SYM打印日志的函数
 	struct symdef dls3_def = find_sym(&ldso, "__dls3", 0);
 	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls3_def.sym-ldso.syms])(sp, auxv);
@@ -1953,7 +1949,6 @@ void __dls3(size_t *sp, size_t *auxv)
 
 	/* The main program must be relocated LAST since it may contain
 	 * copy relocations which depend on libraries' relocations. */
-
 	reloc_all(app.next);
 	reloc_all(&app);
 
@@ -2122,7 +2117,6 @@ void *dlopen(const char *file, int mode)
 	}
 	if (!p->relocated) {
 		DEBUG(DL_OPEN, "Relocate: %s(%p)\n", p->name, p->base);
-
 		reloc_all(p);
 	}
 

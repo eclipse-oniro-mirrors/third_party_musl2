@@ -54,9 +54,9 @@ int info_log(int mod, char* format, ...);
 		if ((t) & DEBUG_MOD) printvf(t, 3, x); \
 	}while(0)
 
-#define DEBUG(t, x...)  if ((t) & DEBUG_MOD) {printvf(t, 2, x);} 
+#define DEBUG(t, x...)  if ((t) & DEBUG_MOD) {fprintf(stdout,"%s\n","DEBUG") ;printvf(t, 2, x);} 
 
 
-#define INFO(t, x...)   if ((t) & DEBUG_MOD) {printvf(t, 1, x);}
+#define INFO(t, x...)   if ((t) & DEBUG_MOD) {fprintf(stdout,"%s\n","INFO") ; printvf(t, 1, x);}
 
 

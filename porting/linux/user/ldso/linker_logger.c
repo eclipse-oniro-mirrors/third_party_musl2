@@ -39,8 +39,8 @@ int linker_logger_va_list(const char* tag, int priority, char* format, va_list a
 	return ret;
 }
 
-int check_mods(int mod, int priority){
-	if ((LINKER_DEBUG & enable_log) == 0){     
+int check_mods(int mod, int priority){       
+	if ((LINKER_DEBUG & enable_log) == 0){
 		return 1;
 	}
 	if (((mod) & DEBUG_MOD) == 0){
