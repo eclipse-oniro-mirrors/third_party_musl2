@@ -1540,6 +1540,7 @@ if (musl_arch == "arm") {
 musl_src_ldso = [
   "ldso/dlstart.c",
   "ldso/dynlink.c",
+  "ldso/linker_logger.c",
 ]
 
 if (musl_arch == "arm") {
