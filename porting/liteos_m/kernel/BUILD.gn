@@ -47,6 +47,7 @@ static_library(libc) {
     "src/ctype/isxdigit.c",
     "src/ctype/tolower.c",
     "src/ctype/toupper.c",
+    "src/env/__stack_chk_fail.c",
     "src/errno/strerror.c",
     "src/exit/abort.c",
     "src/exit/assert.c",
@@ -174,6 +175,10 @@ static_library(libc) {
 
 static_library(libm) {
   sources = [
+    "src/math/__fpclassify.c",
+    "src/math/__fpclassifyl.c",
+    "src/math/__signbit.c",
+    "src/math/__signbitl.c",
     "src/math/exp_data.c",
     "src/math/frexp.c",
     "src/math/frexpl.c",
