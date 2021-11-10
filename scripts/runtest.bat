@@ -49,10 +49,12 @@ for /F %%i in ('dir %LOCAL% /S /B') do (
     )
 )
 hdc file send %DYNLIB%\libdlopen_dso.so /system/lib
+hdc file send %DYNLIB%\libdlopen_dso.so %REMOTE%/functional
 hdc file send %DYNLIB%\libtls_align_dso.so /system/lib
 hdc file send %DYNLIB%\libtls_get_new-dtv_dso.so /system/lib
 hdc file send %DYNLIB%\libtls_init_dso.so /system/lib
 hdc shell chmod 777	/system/lib/libdlopen_dso.so
+hdc shell chmod 777	 %REMOTE%/functional/libdlopen_dso.so
 hdc shell chmod 777	/system/lib/libtls_align_dso.so
 hdc shell chmod 777 /system/lib/libtls_get_new-dtv_dso.so
 hdc shell chmod 777	/system/lib/libtls_init_dso.so
