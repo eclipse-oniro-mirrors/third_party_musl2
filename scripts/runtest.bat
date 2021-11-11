@@ -45,7 +45,7 @@ for /F %%i in ('dir %LOCAL% /S /B') do (
     for %%b in ("%%i\..") do (
         echo Sending %%~nb/%%~nxi
         hdc file send -sync %%i %REMOTE%/%%~nb/%%~nxi
-        hdc shell chmod 777 %REMOTE%/%%~nb/%%~nxi
+        hdc shell chmod a+x %REMOTE%/%%~nb/%%~nxi
     )
 )
 hdc file send %DYNLIB%\libdlopen_dso.so /system/lib
@@ -53,17 +53,17 @@ hdc file send %DYNLIB%\libdlopen_dso.so %REMOTE%/functional
 hdc file send %DYNLIB%\libtls_align_dso.so /system/lib
 hdc file send %DYNLIB%\libtls_get_new-dtv_dso.so /system/lib
 hdc file send %DYNLIB%\libtls_init_dso.so /system/lib
-hdc shell chmod 777	/system/lib/libdlopen_dso.so
-hdc shell chmod 777	 %REMOTE%/functional/libdlopen_dso.so
-hdc shell chmod 777	/system/lib/libtls_align_dso.so
-hdc shell chmod 777 /system/lib/libtls_get_new-dtv_dso.so
-hdc shell chmod 777	/system/lib/libtls_init_dso.so
+hdc shell chmod a+x	/system/lib/libdlopen_dso.so
+hdc shell chmod a+x	 %REMOTE%/functional/libdlopen_dso.so
+hdc shell chmod a+x	/system/lib/libtls_align_dso.so
+hdc shell chmod a+x /system/lib/libtls_get_new-dtv_dso.so
+hdc shell chmod a+x	/system/lib/libtls_init_dso.so
 echo .so to /system/lib finished
 echo Done.
 echo.
 echo Sending run.sh
 hdc file send %SHDIR%\run.sh %REMOTE%/runtest.sh
-hdc shell chmod 777 %REMOTE%/runtest.sh
+hdc shell chmod a+x %REMOTE%/runtest.sh
 echo.
 echo ============================
 echo ALL files send finished.
