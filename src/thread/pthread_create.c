@@ -1,4 +1,7 @@
 #define _GNU_SOURCE
+
+#include <pthread.h>
+
 #include "pthread_impl.h"
 #include "stdio_impl.h"
 #include "libc.h"
@@ -6,6 +9,8 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <stddef.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static void dummy_0()
 {
@@ -296,6 +301,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	}
 
 	new = __copy_tls(tsd - libc.tls_size);
+	new->pid = getpid();//存进程id
 	new->map_base = map;
 	new->map_size = size;
 	new->stack = stack;
@@ -380,3 +386,29 @@ fail:
 
 weak_alias(__pthread_exit, pthread_exit);
 weak_alias(__pthread_create, pthread_create);
+
+struct pthread* __pthread_list_find(pthread_t thread_id, const char* info)
+{
+    struct pthread * thread = (struct pthread *)thread_id; 
+
+	struct pthread *self;
+	self = __pthread_self();//获取头节点地址---主线程id
+
+	for ( struct pthread * t = self ; t != self; t = t->next) {
+		if (t == thread) return thread;
+	} 
+    if (NULL == thread) {
+        printf("invalid pthread_t (0) passed to %s\n", info);
+    } else {
+        printf("invalid pthread_t %p passed to %s\n", thread, info);
+    }
+   
+    return NULL;
+}
+
+pid_t __pthread_gettid(pthread_t t)
+{
+    struct pthread*  thread = __pthread_list_find(t, "pthread_gettid");
+    return thread ? thread->tid : -1;
+}
+weak_alias(__pthread_gettid, pthread_gettid);
