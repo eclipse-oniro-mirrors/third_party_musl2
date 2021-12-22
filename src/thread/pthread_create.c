@@ -9,8 +9,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <stddef.h>
-#include <sys/types.h>
-#include <unistd.h>
+
 
 static void dummy_0()
 {
@@ -301,7 +300,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	}
 
 	new = __copy_tls(tsd - libc.tls_size);
-	new->pid = getpid();//存进程id
+	new->t = __syscall(SYS_getpid); //系统调用获取进程ID
 	new->map_base = map;
 	new->map_size = size;
 	new->stack = stack;
@@ -408,7 +407,7 @@ struct pthread* __pthread_list_find(pthread_t thread_id, const char* info)
 
 pid_t __pthread_gettid(pthread_t t)
 {
-    struct pthread*  thread = __pthread_list_find(t, "pthread_gettid");
-    return thread ? thread->tid : -1;
+    struct pthread* thread = __pthread_list_find(t, "pthread_gettid");
+   	return thread ? thread->t : -1;
 }
 weak_alias(__pthread_gettid, pthread_gettid);

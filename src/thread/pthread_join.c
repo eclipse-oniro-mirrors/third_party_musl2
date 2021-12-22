@@ -34,7 +34,7 @@ static int __pthread_timedjoin_np(pthread_t t, void **res, const struct timespec
 	self->prev->next = self->next;
 	self->prev = self->next = self;
 	__tl_unlock();
-
+	
 	return 0;
 }
 

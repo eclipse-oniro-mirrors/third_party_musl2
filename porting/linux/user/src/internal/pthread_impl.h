@@ -18,6 +18,7 @@ struct pthread {
 	 * internal (accessed via asm) ABI. Do not change. */
 	struct pthread *self;
 	uintptr_t *dtv;
+	pid_t t;
 	struct pthread *prev, *next; /* non-ABI */
 	uintptr_t sysinfo;
 	uintptr_t canary, canary2;
@@ -183,6 +184,7 @@ hidden void __inhibit_ptc(void);
 hidden void __tl_lock(void);
 hidden void __tl_unlock(void);
 hidden void __tl_sync(pthread_t);
+hidden struct pthread* __pthread_list_find(pthread_t, const char*);
 
 extern hidden volatile int __thread_list_lock;
 
