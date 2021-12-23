@@ -3,7 +3,7 @@
 #include "test.h"
 #include <stdio.h>
 
-#define TEST(c) ((c) ? 1 : (t_error(#c" failed: %s" ,strerror(errno)),0))
+#define TEST(c) ((c) ? 1 : (t_error(#c" failed: %s \n" ,strerror(errno)),0))
 
 void* pthread_test(void* arg)
 {
@@ -13,11 +13,11 @@ void* pthread_test(void* arg)
 
 int main(int argc, char const *argv[])
 {
-    TEST(getpid() == pthread_gettid(pthread_self()));//用通过主线程id获取的进程id与用getpid()获取的进程id比较
-
     pid_t pid;
     pthread_t t;
     pthread_create(&t,NULL,pthread_test,&pid);//创建线程
+
+    TEST(getpid() == pthread_gettid(pthread_self()));//用通过主线程id获取的进程id与用getpid()获取的进程id比较
 
     pid_t recv_result = pthread_gettid(t);//利用线程id获取的进程id
 

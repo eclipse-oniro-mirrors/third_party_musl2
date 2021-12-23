@@ -236,7 +236,8 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	sigset_t set;
 
 	if (!libc.can_do_threads) return ENOSYS;
-	self = __pthread_self();
+	self = __pthread_self(); //将进程id的值赋给主线程
+	self->pid = __syscall(SYS_getpid);
 	if (!libc.threaded) {
 		for (FILE *f=*__ofl_lock(); f; f=f->next)
 			init_file_lock(f);
@@ -300,7 +301,6 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	}
 
 	new = __copy_tls(tsd - libc.tls_size);
-	new->t = __syscall(SYS_getpid); //系统调用获取进程ID
 	new->map_base = map;
 	new->map_size = size;
 	new->stack = stack;
@@ -360,6 +360,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	}
 
 	if (ret >= 0) {
+		new->pid = self->pid; //新创建的线程获取进程id
 		new->next = self->next;
 		new->prev = self;
 		new->next->prev = new;
@@ -390,12 +391,15 @@ struct pthread* __pthread_list_find(pthread_t thread_id, const char* info)
 {
     struct pthread * thread = (struct pthread *)thread_id; 
 
-	struct pthread *self;
-	self = __pthread_self();//获取头节点地址---主线程id
+	struct pthread *self = __pthread_self();//获取头节点地址---主线程id
+	struct pthread * t = self;
 
-	for ( struct pthread * t = self ; t != self; t = t->next) {
+	while (1)
+	{
 		if (t == thread) return thread;
-	} 
+		t = t->next ;
+		if(t == self) break;
+	}
     if (NULL == thread) {
         printf("invalid pthread_t (0) passed to %s\n", info);
     } else {
@@ -408,6 +412,6 @@ struct pthread* __pthread_list_find(pthread_t thread_id, const char* info)
 pid_t __pthread_gettid(pthread_t t)
 {
     struct pthread* thread = __pthread_list_find(t, "pthread_gettid");
-   	return thread ? thread->t : -1;
+   	return thread ? thread->pid : -1;
 }
 weak_alias(__pthread_gettid, pthread_gettid);

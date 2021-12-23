@@ -18,12 +18,12 @@ struct pthread {
 	 * internal (accessed via asm) ABI. Do not change. */
 	struct pthread *self;
 	uintptr_t *dtv;
-	pid_t t;
 	struct pthread *prev, *next; /* non-ABI */
 	uintptr_t sysinfo;
 	uintptr_t canary, canary2;
 
 	/* Part 2 -- implementation details, non-ABI. */
+	pid_t pid;
 	int tid;
 	int errno_val;
 	volatile int detach_state;

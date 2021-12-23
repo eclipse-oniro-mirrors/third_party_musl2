@@ -22,19 +22,6 @@ static int __pthread_timedjoin_np(pthread_t t, void **res, const struct timespec
 	__tl_sync(t);
 	if (res) *res = t->result;
 	if (t->map_base) __munmap(t->map_base, t->map_size);
-
-	//确认需要删除的节点在链表中是否存在
-	struct pthread* self = __pthread_list_find(t , "pthread_join");
-	if(NULL == self){
-		return EINVAL;
-	}
-	//删除节点
-	__tl_lock();
-	self->next->prev = self->prev;
-	self->prev->next = self->next;
-	self->prev = self->next = self;
-	__tl_unlock();
-	
 	return 0;
 }
 
